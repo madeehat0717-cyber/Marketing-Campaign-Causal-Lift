@@ -3,7 +3,7 @@
 ## 1. Project Title
 **Marketing Campaign Causal Lift & Uplift Modeling Platform**
 
-🚀 **[View the Live Interactive Dashboard Here!](https://marketing-campaign-causal-lift.streamlit.app/)** *(Note: Replace this link with your actual Streamlit Cloud URL once deployed)*
+🚀 **[View the Live Interactive Dashboard Here!](https://marketing-campaign-causal-lift-k8e3kyqiqtyupgalykm9fj.streamlit.app/)**
 
 ## 2. Problem Statement
 Ordinary machine learning models in marketing predict *\"Who is likely to purchase?\"* 
