@@ -38,3 +38,15 @@ Customers are scored and segmented based on model predictions:
 - **What it is:** The Qini curve plots the cumulative incremental purchases: $R_t(x) - R_c(x) \times \frac{N_t(x)}{N_c(x)}$ against the targeted population fraction. The Qini Coefficient is the Area Under the Qini Curve (AUUC) minus the area under a random targeting baseline.
 - **Why we used it:** Ordinary classification metrics (like ROC-AUC) measure predictive accuracy of the *outcome*, not the causal *incremental impact*.
 - **In this project:** We report the Qini Coefficient to demonstrate how the uplift model outperforms a random targeting baseline under the simulated campaign assumptions.
+
+## Explainable AI (Feature Importance)
+- **What it is:** We extract Permutation Importance from the calibrated outcome models.
+- **Why we used it:** To understand which customer attributes most strongly influence the underlying purchase probability models that determine the ITE.
+- **In this project:** It is strictly documented that this represents *predictive importance of the outcome*, which correlates with, but does not definitively establish, causal feature importance.
+
+## Uplift Decile Lift Analysis
+- **What it is:** Grouping customers by their predicted uplift into 10 equal buckets, and then observing the *actual empirical difference* between the treatment and control outcomes in those buckets.
+- **Why we used it:** To visually prove that the customers the model ranked highest actually exhibited the highest true incremental conversion rates.
+
+## Target Export
+- **What it is:** The Customer Targeting tab allows marketing managers to dynamically filter segments (e.g. "Persuadables") and download a CSV list for production use.

@@ -4,7 +4,7 @@ from data_generation import generate_synthetic_data
 from data_cleaning import clean_data
 from feature_engineering import engineer_features
 from causal_analysis import calculate_ate
-from uplift_model import train_uplift_model
+from uplift_model import train_uplift_model, extract_feature_importance
 from segmentation import segment_customers
 import joblib
 
@@ -40,6 +40,15 @@ def run_pipeline():
     # 5. Train Uplift Model
     print("5. Training Uplift Model (T-Learner)...")
     uplift_model, baseline_model, df_scored = train_uplift_model(df_feat, feature_cols)
+    
+    print("Extracting feature importance (this may take a moment)...")
+    fi_df = extract_feature_importance(
+        uplift_model, 
+        df_scored[feature_cols], 
+        df_scored['purchase_outcome'], 
+        df_scored['treatment']
+    )
+    fi_df.to_csv(os.path.join(models_dir, 'feature_importance.csv'), index=False)
     
     # Save models
     joblib.dump(uplift_model, os.path.join(models_dir, 'uplift_model.joblib'))

@@ -1,0 +1,12 @@
+Feature,Importance
+age,0.0
+income,0.0
+customer_tenure,0.0
+previous_purchases,0.0
+average_order_value,0.0
+website_visits,0.0
+email_open_rate,0.0
+discount_usage,0.0
+recency_days,0.0
+engagement_score,0.0
+value_per_tenure,0.0

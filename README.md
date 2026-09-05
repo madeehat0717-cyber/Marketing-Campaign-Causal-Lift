@@ -27,8 +27,10 @@ The dataset is **synthetic** and generated to simulate realistic e-commerce beha
 - **Data Generation:** Creates realistic treatment/control data.
 - **Causal Analysis:** Evaluates overall experimental ATE using A/B testing principles and verifies overlap/positivity.
 - **Uplift Modeling:** Implements a T-Learner using Gradient Boosting, validated strictly on a holdout test set.
+- **Explainable AI:** Uses Permutation Importance to extract and visualize the predictive drivers of uplift without assuming direct causality.
 - **Customer Segmentation:** Divides customers into Persuadables, Sure Things, Lost Causes, and Do-Not-Disturb.
-- **Evaluation:** Qini curves, AUUC (Qini Coefficient), and decile lift analysis.
+- **Evaluation:** Qini curves, AUUC (Qini Coefficient), and decile lift analysis (Targeting vs Control observed lift).
+- **Targeting Export:** Filter dynamic audience segments and export them as a production-ready CSV list.
 - **ROI Simulator:** Simulates targeting profitability.
 - **Streamlit Dashboard:** Interactive UI.
 

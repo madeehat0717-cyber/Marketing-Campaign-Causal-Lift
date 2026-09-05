@@ -32,7 +32,16 @@ def load_db():
         return None
     return sqlite3.connect(db_path)
 
+@st.cache_data
+def load_feature_importance():
+    base_dir = os.path.dirname(os.path.dirname(__file__))
+    path = os.path.join(base_dir, 'models', 'feature_importance.csv')
+    if os.path.exists(path):
+        return pd.read_csv(path)
+    return None
+
 df = load_data()
+fi_df = load_feature_importance()
 
 if df is None:
     st.error("Processed data not found. Please run `python src/pipeline.py` first.")
@@ -139,14 +148,26 @@ with tabs[2]:
         fig = px.pie(segment_counts, values='Count', names='Segment', title='Uplift Segments')
         st.plotly_chart(fig, use_container_width=True)
         
-    st.subheader("Uplift by Decile")
+    st.subheader("Uplift by Decile (Observed Differences)")
+    st.markdown("Decile 1 = Customers with the highest predicted uplift. We expect the actual observed lift (Treatment Rate - Control Rate) to be highest in Decile 1 and lowest in Decile 10.")
     decile_results = evaluate_deciles(df)
     
     fig = go.Figure()
-    fig.add_trace(go.Bar(x=decile_results['decile'], y=decile_results['actual_lift'], name='Actual Lift'))
-    fig.add_trace(go.Scatter(x=decile_results['decile'], y=decile_results['predicted_uplift'], name='Predicted Uplift (Mean)', mode='lines+markers'))
-    fig.update_layout(title='Lift by Predicted Uplift Decile (1 = Highest Uplift)', xaxis_title='Decile', yaxis_title='Lift')
+    fig.add_trace(go.Bar(x=decile_results['decile'], y=decile_results['treatment_rate'], name='Treatment Conv. Rate', offsetgroup=0))
+    fig.add_trace(go.Bar(x=decile_results['decile'], y=decile_results['control_rate'], name='Control Conv. Rate', offsetgroup=1))
+    fig.add_trace(go.Scatter(x=decile_results['decile'], y=decile_results['actual_lift'], name='Observed Incremental Lift', mode='lines+markers', yaxis='y2', line=dict(color='black', width=3)))
+    
+    fig.update_layout(
+        title='Observed Treatment vs Control Conversion by Predicted Uplift Decile', 
+        xaxis_title='Decile (1 = Highest Predicted Uplift)', 
+        yaxis_title='Conversion Rate',
+        yaxis2=dict(title='Observed Lift', overlaying='y', side='right'),
+        barmode='group'
+    )
     st.plotly_chart(fig, use_container_width=True)
+    
+    with st.expander("View Decile Data Table"):
+        st.dataframe(decile_results.style.format({'treatment_rate': '{:.2%}', 'control_rate': '{:.2%}', 'actual_lift': '{:.2%}', 'predicted_uplift': '{:.2%}'}))
     
     st.subheader("Qini Curve (Incremental Gains)")
     x_axis, qini, random_line = qini_curve_data(df)
@@ -155,6 +176,22 @@ with tabs[2]:
     fig.add_trace(go.Scatter(x=x_axis, y=random_line, mode='lines', name='Random Targeting', line=dict(dash='dash')))
     fig.update_layout(title='Qini Curve', xaxis_title='Targeted Population (%)', yaxis_title='Incremental Conversions')
     st.plotly_chart(fig, use_container_width=True)
+    
+    if fi_df is not None:
+        st.markdown("---")
+        st.subheader("Explainable AI: What drives uplift?")
+        st.markdown("This chart shows the **Predictive Feature Importance** (via Permutation Importance) extracted from the T-Learner models. It highlights which customer attributes most strongly influence the underlying purchase probability models that determine the Individual Treatment Effect (ITE).")
+        
+        fig_fi = px.bar(
+            fi_df.sort_values(by='Importance', ascending=True), 
+            x='Importance', 
+            y='Feature', 
+            orientation='h',
+            title='Feature Importance (Average of Treatment & Control Models)'
+        )
+        st.plotly_chart(fig_fi, use_container_width=True)
+        
+        st.info("**Interpretation Example:** If `discount_usage` has the highest importance, it means a customer's historical response to discounts is the most powerful predictor of whether this new campaign will successfully persuade them.")
 
 # --- Tab 4: Customer Targeting ---
 with tabs[3]:
@@ -172,10 +209,16 @@ with tabs[3]:
     
     st.write(f"**Target Audience Size:** {len(target_df)} customers ({len(target_df)/len(df)*100:.1f}% of total)")
     
-    st.dataframe(
-        target_df[['customer_id', 'uplift_segment', 'pred_prob_t1', 'pred_prob_t0', 'pred_ite']]
-        .sort_values(by='pred_ite', ascending=False)
-        .head(100)
+    export_df = target_df[['customer_id', 'uplift_segment', 'pred_prob_t1', 'pred_prob_t0', 'pred_ite', 'age', 'income', 'historical_spend']].sort_values(by='pred_ite', ascending=False)
+    
+    st.dataframe(export_df.head(100))
+    
+    csv = export_df.to_csv(index=False).encode('utf-8')
+    st.download_button(
+        label="Download Targeting List (CSV)",
+        data=csv,
+        file_name='marketing_targeting_export.csv',
+        mime='text/csv',
     )
 
 # --- Tab 5: ROI Simulator ---

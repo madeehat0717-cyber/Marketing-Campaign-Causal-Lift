@@ -93,3 +93,37 @@ def train_uplift_model(df, feature_cols, target_col='purchase_outcome', treatmen
     
     return model, baseline_calibrated, results_df
 
+from sklearn.inspection import permutation_importance
+
+def extract_feature_importance(model, X_test, y_test, t_test):
+    """
+    Extracts permutation importance from the trained T-Learner models on the holdout set.
+    Since we are modeling treatment and control separately, we calculate the predictive importance 
+    for both models and average them to see which features drive the underlying outcome predictions.
+    NOTE: This represents predictive importance in the outcome models, which correlates with 
+    causal uplift, but is not strictly 'causal feature importance' in isolation.
+    """
+    mask_t1 = (t_test == 1)
+    mask_t0 = (t_test == 0)
+    
+    # Calculate for Treatment model (using only treated test instances)
+    imp_t1 = permutation_importance(
+        model.calibrated_t1, X_test[mask_t1], y_test[mask_t1], 
+        n_repeats=5, random_state=42, n_jobs=-1
+    )
+    
+    # Calculate for Control model (using only control test instances)
+    imp_t0 = permutation_importance(
+        model.calibrated_t0, X_test[mask_t0], y_test[mask_t0], 
+        n_repeats=5, random_state=42, n_jobs=-1
+    )
+    
+    # Average the mean importance scores
+    avg_importance = (imp_t1.importances_mean + imp_t0.importances_mean) / 2.0
+    
+    fi_df = pd.DataFrame({
+        'Feature': X_test.columns,
+        'Importance': avg_importance
+    }).sort_values(by='Importance', ascending=False).reset_index(drop=True)
+    
+    return fi_df
