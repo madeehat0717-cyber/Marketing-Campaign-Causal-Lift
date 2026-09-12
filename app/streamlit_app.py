@@ -209,7 +209,7 @@ with tabs[3]:
     
     st.write(f"**Target Audience Size:** {len(target_df)} customers ({len(target_df)/len(df)*100:.1f}% of total)")
     
-    export_df = target_df[['customer_id', 'uplift_segment', 'pred_prob_t1', 'pred_prob_t0', 'pred_ite', 'age', 'income', 'historical_spend']].sort_values(by='pred_ite', ascending=False)
+    export_df = target_df[['customer_id', 'uplift_segment', 'pred_prob_t1', 'pred_prob_t0', 'pred_ite', 'age', 'income', 'average_order_value']].sort_values(by='pred_ite', ascending=False)
     
     st.dataframe(export_df.head(100))
     
